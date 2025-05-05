@@ -1,4 +1,5 @@
-# 大语言模型模块
+# 在llm.py最顶部添加
+import requests  # 🔥 关键修复
 from vlm import *
 
 try:
@@ -15,7 +16,25 @@ spark_history = []
 sf_url = "https://api.siliconflow.cn/v1"
 
 
-def chat_preprocess(msg):  # 预处理
+def chat_preprocess(msg):
+    # 统一加载配置文件
+    with open('data/set/more_set.json', 'r', encoding='utf-8') as f:
+        more_config = json.load(f)
+    # 语音指令关键词读取
+    VOICE_KEYWORDS = more_config.get("HAAI关键词", [])
+    for kw in VOICE_KEYWORDS:
+        if kw in msg:
+            command = msg.replace(kw, "", 1).strip()
+            return send_ha_voice_command(command)
+            
+    # 文本指令关键词读取
+    for kw in more_config.get("HA文本指令关键词", []):
+        if kw in msg:
+            command = msg.replace(kw, "", 1).strip()
+            result = send_ha_command(command)
+            return f"{result}"
+    
+    # 原有图像识别逻辑不变
     try:
         content = "图像识别已关闭"
         if ("屏幕" in msg or "画面" in msg or "图像" in msg or "看到" in msg or "看见" in msg or "照片" in msg or "摄像头" in msg or "图片" in msg) and img_menu.get() != "关闭图像识别":
@@ -276,6 +295,62 @@ def clear_chat():  # 清除对话记录
         with open('data/db/memory.db', 'w', encoding='utf-8') as f:
             f.write("")
         notice("记忆和聊天记录已清空")
+
+# 新增在llm.py中
+def send_ha_command(command):
+    try:
+        with open('data/set/more_set.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            
+        ha_config = {
+            "url": config.get("HomeAssistant服务器IP", ""),
+            "token": config.get("HomeAssistant Token", ""),
+            "text_entity": config.get("文本指令实体ID", "")
+        }
+        
+        response = requests.post(
+            f"{ha_config['url']}/api/services/text/set_value",
+            headers={"Authorization": f"Bearer {ha_config['token']}"},
+            json={"entity_id": ha_config["text_entity"], "value": command},
+            timeout=5
+        )
+
+        result_list = response.json()
+        if isinstance(result_list, list) and len(result_list) > 0:
+            result = f"执行成功：{result_list[0].get('state', '操作完成')}".replace("{lv=stt}", command)
+        else:
+            result = "指令已执行"
+            
+        notice(f"收到{mate_name}回复")  # 新增通知 <mcsymbol name="notice" filename="llm.py" path="f:\虚拟ai伙伴\web版ai伙伴开发\枫云AI虚拟伙伴Web版v3.0\llm.py" startline="1" type="function"></mcsymbol>
+        return result
+        
+    except Exception as e:
+        return f"操作异常：{str(e)}"  # 错误信息也去除前缀
+
+def send_ha_voice_command(text):
+    try:
+        with open('data/set/more_set.json', 'r', encoding='utf-8') as f:
+            config = json.load(f)
+            
+        ha_config = {
+            "url": config.get("HomeAssistant服务器IP", ""),
+            "token": config.get("HomeAssistant Token", ""),
+            "voice_agent": config.get("语音API实体ID", "")
+        }
+        
+        response = requests.post(
+            f"{ha_config['url']}/api/conversation/process",
+            headers={"Authorization": f"Bearer {ha_config['token']}"},
+            json={"agent_id": ha_config["voice_agent"], "text": text, "language": "zh-CN"},
+            timeout=20
+        )
+        
+        notice(f"收到{mate_name}回复")  # 新增通知
+        return response.json()['response']['speech']['plain']['speech']
+
+    except Exception as e:
+        return f"语音指令失败: {str(e)}"
+
 
 
 def clean_chat_web():  # 清除对话记录

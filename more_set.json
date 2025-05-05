@@ -1,0 +1,14 @@
+{
+    "摄像头编号": "2",
+    "麦克风编号": "0",
+    "Ollama端口": "11434",
+    "MMD 3D动作音乐开关(可选项:on/off)": "on",
+    "MMD 3D动作音乐名称(位于data/music文件夹)": "测试音乐.mp3",
+    "GPT-SoVITS语言": "zh",
+    "HomeAssistant服务器IP": "http://192.168.31.141:8123",
+    "HomeAssistant Token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiIwMWUzZjJmYjhhMGM0MDA1YTZiNDYzNTJmMTdhYzE2NSIsImlhdCI6MTc0NTI1NDU2MCwiZXhwIjoyMDYwNjE0NTYwfQ.s2XdMrBJHqIpHk0IHvpvwmUauslRs7D95xI3MKNFVIo",
+    "文本指令实体ID": "text.xiaomi_l16a_0be7_execute_text_directive",
+    "语音API实体ID": "conversation.huo_tian_da_you_ju_he_ai",
+    "HAAI关键词": ["小周", "小舟"],
+    "HA文本指令关键词": ["小爱"]
+}
